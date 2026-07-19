@@ -15,9 +15,9 @@ if (!BOT_TOKEN) {
 const CONFIG_FILE = path.join(__dirname, 'config.json');
 let config = {
   welcome:
-    '👋 Chào mừng bạn đến với bot!\n\nVui lòng chọn một mục ở bàn phím bên dưới 👇',
-  groupShare: 'Vào Đây Lấy Hack Này Con Tuất/n https://t.me/+your_share_group',
-  groupChat: 'Vào Đây Chat Này Con Tuất/n https://t.me/+your_chat_group',
+    '👋 Chào mừng tuất đến với bot!\n\n🐶 Vào nhóm để được yêu thương https://t.me/luxyffshare\n\n🔥 Admin nhận làm bot tele theo yêu cầu của se cần thì bấm hỗ trợ nhé! ',
+  groupShare: 'Vào Đây Lấy Hack Này Con Tuất👀 \n https://t.me/+your_share_group',
+  groupChat: 'Vào Đây Chat Này Con Tuất👀 \n https://t.me/+your_chat_group',
   buyMenu: 'Liên hệ admin để mua Menu Anti: @huybuwin',
   support: 'Liên hệ hỗ trợ: @huybuwin',
 };
