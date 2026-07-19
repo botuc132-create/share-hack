@@ -22,12 +22,12 @@ const BTN_SUPPORT = '📞 Hỗ Trợ';
 
 const DEFAULT_CONFIG = {
   responses: {
-    share: 'https://t.me/luxyffshare',
-    chat: 'https://t.me/luxyffch',
-    menu: 'Liên hệ admin: @huybuwin',
-    support: 'Liên hệ admin: @huybuwin',
+    share: Vào Lấy Đây Lấy Hack Này Con Tuất /n 'https://t.me/luxyffshare',
+    chat: Vào Đây Chat Này Con Tuất /n 'https://t.me/luxyffch',
+    menu: 'Liên hệ admin Để Mua /n : @huybuwin',
+    support: 'Liên hệ admin /n : @huybuwin',
   },
-  startText: 'Vào Nhóm Để Nhận Menu Miễn Phí https://t.me/luxyffshare',
+  startText: 'Vào Nhóm Để Nhận Menu Miễn Phí /n 🔥 Admin Có Nhận Làm Bot Theo Yêu Câu Ai Cần Làm Thì Liên Hệ Nhé. /n 👀 https://t.me/luxyffshare',
 };
 
 function ensureFile(file, defaults) {
