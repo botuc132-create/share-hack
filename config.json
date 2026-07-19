@@ -1,0 +1,15 @@
+{
+  "buttons": {
+    "share": "Nhóm Share Đồ",
+    "chat": "Nhóm Chat",
+    "menu": "Mua Menu Anti",
+    "support": "Hỗ trợ"
+  },
+  "responses": {
+    "share": "https://t.me/luxyffshare",
+    "chat": "https://t.me/luxyffch",
+    "menu": "Liên hệ admin: @huybuwin",
+    "support": "Liên hệ admin: @huybuwin"
+  },
+  "startText": "Vào Nhóm Để Nhận Menu Miễn Phí https://t.me/luxyffshare"
+}
