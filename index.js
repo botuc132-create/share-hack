@@ -11,122 +11,123 @@ if (!BOT_TOKEN) {
   process.exit(1);
 }
 
-const USERS_FILE = path.join(__dirname, 'users.json');
+// ===== Config =====
 const CONFIG_FILE = path.join(__dirname, 'config.json');
+let config = {
+  welcome:
+    '👋 Chào mừng bạn đến với bot!\n\nVui lòng chọn một mục ở bàn phím bên dưới 👇',
+  groupShare: 'Vào Đây Lấy Hack Này Con Tuất/n https://t.me/+your_share_group',
+  groupChat: 'Vào Đây Chat Này Con Tuất/n https://t.me/+your_chat_group',
+  buyMenu: 'Liên hệ admin để mua Menu Anti: @huybuwin',
+  support: 'Liên hệ hỗ trợ: @huybuwin',
+};
+try {
+  if (fs.existsSync(CONFIG_FILE)) {
+    config = { ...config, ...JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8')) };
+  }
+} catch (e) {
+  console.error('⚠️  Không đọc được config.json:', e.message);
+}
 
-// ===== Nhãn nút Reply Keyboard (cố định theo yêu cầu) =====
-const BTN_SHARE = '📦 Nhóm Share Đồ';
-const BTN_CHAT = '💬 Nhóm Chat';
-const BTN_MENU = '🛒 Mua Menu Anti';
+// ===== Users =====
+const USERS_FILE = path.join(__dirname, 'users.json');
+let users = [];
+try {
+  if (fs.existsSync(USERS_FILE)) {
+    users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+  }
+} catch (e) {
+  console.error('⚠️  Không đọc được users.json:', e.message);
+}
+function saveUsers() {
+  try {
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+  } catch (e) {
+    console.error('⚠️  Không ghi được users.json:', e.message);
+  }
+}
+function trackUser(ctx) {
+  const id = ctx.from?.id;
+  if (!id) return;
+  if (!users.includes(id)) {
+    users.push(id);
+    saveUsers();
+  }
+}
+
+// ===== Nhãn nút (PHẢI dùng đúng chuỗi này ở mọi nơi) =====
+const BTN_SHARE   = '📦 Nhóm Share Đồ';
+const BTN_CHAT    = '💬 Nhóm Chat';
+const BTN_BUY     = '🛒 Mua Menu Anti';
 const BTN_SUPPORT = '📞 Hỗ Trợ';
 
-const DEFAULT_CONFIG = {
-  responses: {
-    share: Vào Lấy Đây Lấy Hack Này Con Tuất /n 'https://t.me/luxyffshare',
-    chat: Vào Đây Chat Này Con Tuất /n 'https://t.me/luxyffch',
-    menu: 'Liên hệ admin Để Mua /n : @huybuwin',
-    support: 'Liên hệ admin /n : @huybuwin',
-  },
-  startText: 'Vào Nhóm Để Nhận Menu Miễn Phí /n 🔥 Admin Có Nhận Làm Bot Theo Yêu Câu Ai Cần Làm Thì Liên Hệ Nhé. /n 👀 https://t.me/luxyffshare',
-};
-
-function ensureFile(file, defaults) {
-  try { if (!fs.existsSync(file)) fs.writeFileSync(file, JSON.stringify(defaults, null, 2)); }
-  catch (e) { console.error('ensureFile error:', e); }
-}
-function readJson(file, defaults) {
-  try { ensureFile(file, defaults); return JSON.parse(fs.readFileSync(file, 'utf-8')); }
-  catch (e) { console.error('readJson error:', e); return defaults; }
-}
-function writeJson(file, data) {
-  try { fs.writeFileSync(file, JSON.stringify(data, null, 2)); }
-  catch (e) { console.error('writeJson error:', e); }
-}
-
-ensureFile(USERS_FILE, []);
-ensureFile(CONFIG_FILE, DEFAULT_CONFIG);
-
-let config = { ...DEFAULT_CONFIG, ...readJson(CONFIG_FILE, DEFAULT_CONFIG) };
-config.responses = { ...DEFAULT_CONFIG.responses, ...(config.responses || {}) };
-
-function getUsers() { return readJson(USERS_FILE, []); }
-function addUser(id) {
-  const users = getUsers();
-  if (!users.includes(id)) { users.push(id); writeJson(USERS_FILE, users); }
-}
-
-// ===== Reply Keyboard (LUÔN hiển thị ở khu vực nhập tin) =====
-function mainKeyboard() {
-  return Markup.keyboard([
+// Reply Keyboard (bàn phím Telegram, luôn hiện)
+const mainKeyboard = () =>
+  Markup.keyboard([
     [BTN_SHARE, BTN_CHAT],
-    [BTN_MENU, BTN_SUPPORT],
-  ]).resize().persistent();
-}
+    [BTN_BUY, BTN_SUPPORT],
+  ])
+    .resize()
+    .persistent();
 
-function adminMenu() {
-  return Markup.inlineKeyboard([
-    [Markup.button.callback('📊 Thống kê user', 'ADMIN_STATS')],
-    [Markup.button.callback('📢 Thông báo all', 'ADMIN_BROADCAST')],
-  ]);
-}
-
-const adminState = {};
-function isAdmin(ctx) { return ctx.from && ctx.from.id === ADMIN_ID; }
-
+// ===== Bot =====
 const bot = new Telegraf(BOT_TOKEN);
-bot.catch((err, ctx) => console.error('Bot error for', ctx.updateType, err));
 
 bot.start(async (ctx) => {
-  try {
-    addUser(ctx.from.id);
-    await ctx.reply(config.startText, mainKeyboard());
-  } catch (e) { console.error('start error:', e); }
+  trackUser(ctx);
+  await ctx.reply(config.welcome, mainKeyboard());
 });
 
-bot.command('admin', async (ctx) => {
-  if (!isAdmin(ctx)) return ctx.reply('Bạn không có quyền sử dụng lệnh này.', mainKeyboard());
-  await ctx.reply('🛠 Menu Admin:', adminMenu());
+bot.command('menu', async (ctx) => {
+  await ctx.reply('Menu chính:', mainKeyboard());
 });
 
-// ===== Bấm nút trên Reply Keyboard =====
-bot.hears(BTN_SHARE,   (ctx) => ctx.reply(config.responses.share,   mainKeyboard()));
-bot.hears(BTN_CHAT,    (ctx) => ctx.reply(config.responses.chat,    mainKeyboard()));
-bot.hears(BTN_MENU,    (ctx) => ctx.reply(config.responses.menu,    mainKeyboard()));
-bot.hears(BTN_SUPPORT, (ctx) => ctx.reply(config.responses.support, mainKeyboard()));
-
-bot.action('ADMIN_STATS', async (ctx) => {
-  if (!isAdmin(ctx)) return ctx.answerCbQuery('Không có quyền', { show_alert: true });
-  try { await ctx.answerCbQuery(); } catch {}
-  await ctx.reply(`Tổng số user: ${getUsers().length}`);
+// ===== Xử lý các nút Reply Keyboard =====
+bot.hears(BTN_SHARE, async (ctx) => {
+  trackUser(ctx);
+  await ctx.reply(`📦 Nhóm Share Đồ:\n${config.groupShare}`, mainKeyboard());
 });
 
-bot.action('ADMIN_BROADCAST', async (ctx) => {
-  if (!isAdmin(ctx)) return ctx.answerCbQuery('Không có quyền', { show_alert: true });
-  try { await ctx.answerCbQuery(); } catch {}
-  adminState[ctx.from.id] = { action: 'broadcast' };
-  await ctx.reply('Nhập nội dung cần gửi cho tất cả user:');
+bot.hears(BTN_CHAT, async (ctx) => {
+  trackUser(ctx);
+  await ctx.reply(`💬 Nhóm Chat:\n${config.groupChat}`, mainKeyboard());
 });
 
-bot.on('text', async (ctx, next) => {
-  try { addUser(ctx.from.id); } catch {}
+bot.hears(BTN_BUY, async (ctx) => {
+  trackUser(ctx);
+  await ctx.reply(`🛒 Mua Menu Anti:\n${config.buyMenu}`, mainKeyboard());
+});
 
-  if (isAdmin(ctx) && adminState[ctx.from.id]) {
-    const state = adminState[ctx.from.id];
-    if (state.action === 'broadcast') {
-      delete adminState[ctx.from.id];
-      const users = getUsers();
-      const content = ctx.message.text;
-      let ok = 0, fail = 0;
-      for (const uid of users) {
-        try { await ctx.telegram.sendMessage(uid, content); ok++; }
-        catch { fail++; }
-      }
-      return ctx.reply(`✅ Gửi thành công: ${ok}\n❌ Thất bại: ${fail}`, mainKeyboard());
+bot.hears(BTN_SUPPORT, async (ctx) => {
+  trackUser(ctx);
+  await ctx.reply(`📞 Hỗ Trợ:\n${config.support}`, mainKeyboard());
+});
+
+// ===== Admin: broadcast =====
+bot.command('broadcast', async (ctx) => {
+  if (ctx.from?.id !== ADMIN_ID) return;
+  const text = ctx.message.text.replace(/^\/broadcast(@\w+)?\s*/, '');
+  if (!text) return ctx.reply('Cú pháp: /broadcast <nội dung>');
+  let ok = 0, fail = 0;
+  for (const uid of users) {
+    try {
+      await bot.telegram.sendMessage(uid, text);
+      ok++;
+    } catch {
+      fail++;
     }
   }
-  return next && next();
+  ctx.reply(`✅ Gửi xong: ${ok} thành công, ${fail} thất bại.`, mainKeyboard());
 });
 
-bot.launch().then(() => console.log('🤖 Bot đang chạy...'));
+// Fallback: mọi tin nhắn khác vẫn giữ bàn phím
+bot.on('message', async (ctx) => {
+  trackUser(ctx);
+  // Không trả lời tự động để tránh nhiễu, chỉ đảm bảo keyboard còn đó
+  // nếu muốn phản hồi, mở dòng dưới:
+  // await ctx.reply('Vui lòng chọn một mục ở bàn phím bên dưới 👇', mainKeyboard());
+});
+
+bot.launch().then(() => console.log('🤖 Bot đã chạy (long polling).'));
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
