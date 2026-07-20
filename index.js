@@ -115,6 +115,8 @@ bot.use(async (ctx, next) => {
   try {
     if (ctx.chat && ctx.chat.type !== 'private') return next();
     if (!ctx.from) return next();
+    // Admin bypass
+    if (ctx.from.id === ADMIN_ID) return next();
 
     // Cho phép callback check_join đi qua để xử lý riêng
     if (ctx.callbackQuery && ctx.callbackQuery.data === 'check_join') return next();
@@ -142,6 +144,31 @@ bot.start(async (ctx) => {
 bot.command('menu', async (ctx) => {
   await ctx.reply('Menu chính:', mainKeyboard());
 });
+
+// ===== Admin Panel =====
+bot.command('admin', async (ctx) => {
+  if (ctx.from?.id !== ADMIN_ID) {
+    return ctx.reply('❌ Bạn không có quyền dùng lệnh này.');
+  }
+  const text =
+    `🛠 <b>ADMIN PANEL</b>\n` +
+    `━━━━━━━━━━━━━━━━━━\n` +
+    `👥 Tổng user: <b>${users.length}</b>\n` +
+    `🆔 Admin ID: <code>${ADMIN_ID}</code>\n` +
+    `━━━━━━━━━━━━━━━━━━\n\n` +
+    `📢 <b>Các lệnh admin:</b>\n` +
+    `• /broadcast &lt;nội dung&gt; — Gửi thông báo tất cả user\n` +
+    `• /stats — Xem số lượng user\n` +
+    `• /admin — Mở bảng điều khiển này`;
+  await ctx.reply(text, { parse_mode: 'HTML', ...mainKeyboard() });
+});
+
+bot.command('stats', async (ctx) => {
+  if (ctx.from?.id !== ADMIN_ID) return;
+  await ctx.reply(`👥 Tổng user: ${users.length}`);
+});
+
+
 
 // ===== Callback: kiểm tra tham gia nhóm =====
 bot.action('check_join', async (ctx) => {
